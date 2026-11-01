@@ -22,6 +22,9 @@ Cost safeguards:
 
 - Covers both operating system packages and language packages (npm), matching what the agent has to fix.
 - `ListFindings` also returns `CLOSED` findings of deleted images; every query must filter on status and image digest.
-- Images with a discontinued base OS (e.g. Alpine 3.18) report `UNSUPPORTED_IMAGE`; language packages may still be scanned, OS packages are not. The demo image therefore uses a supported Debian base.
+- An image index (BuildKit default) reports `UNSUPPORTED_IMAGE`; Inspector scans its untagged child manifest instead, so findings must be looked up by digest, not by tag.
+- Inspector stops reporting OS findings for a discontinued OS 12 months after end of support (e.g. Alpine 3.18). The demo image therefore uses a supported Debian base.
 - Findings fall into three sources, identified by `filePath`: direct dependencies, transitive dependencies (`/app/node_modules/…`), and the base image (`/usr/local/lib/node_modules/npm/…`, OS packages). Only the first two can be fixed in `package.json`.
 - Verification uses Inspector itself: findings of a deleted image switch to `CLOSED`.
+
+See [manual baseline run](../manual-run.md) for how these were found.

@@ -4,7 +4,13 @@ Deliberately outdated Express service. It only exists as a **scan target** for t
 
 The image is stored in Amazon ECR (`demo-service` repository, tags immutable) and scanned by Amazon Inspector (enhanced scanning), which reports **operating system and npm** vulnerabilities – see [ADR 0002](../../docs/adr/0002-amazon-inspector-as-finding-source.md).
 
-The npm dependencies are pinned to outdated versions on purpose. The base image must use an OS that Inspector still supports; a discontinued one (e.g. Alpine 3.18) results in `UNSUPPORTED_IMAGE`.
+The npm dependencies are pinned to outdated versions on purpose (`axios` has already been fixed once, see the [manual baseline run](../../docs/manual-run.md)). The base image must use an OS that Inspector still supports; for a discontinued one (e.g. Alpine 3.18) OS packages are no longer reported.
+
+If the image is pushed as an image index (BuildKit), the tag shows `UNSUPPORTED_IMAGE` – Inspector scans the untagged child manifest. Check scan status and findings by that digest:
+
+```bash
+aws ecr describe-image-scan-findings --repository-name demo-service --image-id imageDigest=<digest> --profile inspector --region eu-north-1 --query imageScanStatus
+```
 
 ## Build and push
 
