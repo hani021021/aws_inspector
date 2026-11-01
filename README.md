@@ -1,9 +1,9 @@
 # AWS Inspector Remediation Agent
 
-Automates the manual loop of fixing AWS Inspector package vulnerabilities in container images and Lambda functions:
+Automates the manual loop of fixing AWS Inspector package vulnerabilities in container images:
 find → analyze → bump package → open PR → deploy → clean up old ECR images → verify resolved.
 
-Built with Claude (Anthropic API), an MCP server, agent skills and an eval suite, deployed serverless on AWS.
+Built with Claude (Claude Code), an MCP server, an agent skill and an eval suite; the deploy and cleanup run serverless on AWS.
 
 > Status: ✅ M3 – agent fixes all findings of an image in one pull request (95 → 1 findings in the sandbox) · ✅ M5a – after every push of `latest`, AWS verifies the scan, e-mails a cleanup plan and deletes old images on approval · 🚧 M4 evals
 
@@ -23,7 +23,9 @@ It is time-consuming, easy to postpone and requires context switching between In
 
 ## The solution
 
-See [docs/architecture.md](docs/architecture.md). Before automating, the loop was run once by hand – the [manual baseline run](docs/manual-run.md) lists the edge cases the agent has to handle.
+![How it works: detect, analyze and fix, approve, build and push, clean up](docs/architecture.svg)
+
+Details in [docs/architecture.md](docs/architecture.md). Before automating, the loop was run once by hand – the [manual baseline run](docs/manual-run.md) lists the edge cases the agent has to handle.
 
 ## MCP server
 
