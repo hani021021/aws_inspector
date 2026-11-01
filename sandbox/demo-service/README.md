@@ -24,9 +24,11 @@ docker push <account-id>.dkr.ecr.eu-north-1.amazonaws.com/demo-service:<version>
 On Windows the ECR token is too long for the Windows credential store. Use the ECR credential helper with a project-specific Docker config instead of `docker login`:
 
 ```powershell
-$env:DOCKER_CONFIG = "$HOME\.docker-inspector"   # contains {"credHelpers": {"<registry>": "ecr-login"}}
+$env:DOCKER_CONFIG = "$HOME\.docker-inspector"   # {"credHelpers": {"<registry>": "ecr-login"}, "cliPluginsExtraDirs": ["<docker-cli-plugins dir>"]}
 aws configure export-credentials --profile inspector --format powershell | Invoke-Expression
 ```
+
+Without `cliPluginsExtraDirs` (Rancher Desktop: `resources\resources\win32\docker-cli-plugins`) Docker cannot find buildx in the custom config and `docker build` silently falls back to the classic builder, which pushes a single manifest instead of an image index.
 
 ## Delete an image
 

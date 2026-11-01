@@ -33,3 +33,4 @@ Before automating anything, the full remediation loop was run once by hand again
 | 7 | Pin exact versions (`--save-exact`), never `^`. | Fix skill |
 | 8 | Delete the image index before its children (`ImageReferencedByManifestList` otherwise). Never delete the running image; deletion needs approval. | Cleanup step |
 | 9 | Scan and close are asynchronous (`PENDING` → `COMPLETE` → `ACTIVE`; findings still appear after `COMPLETE`, and close minutes after deletion). Compare only once counts are stable. | Verification step |
+| 10 | `fixedInVersion` can point to a new major or even a pre-release (express 4.17.1 → `5.0.0-beta.3`) although the current line has a fix. Never propose pre-releases; change the major only if the current line has no fix, and flag it as breaking in the PR. Found after the run, while testing the MCP server. | Analysis (Claude), eval |
