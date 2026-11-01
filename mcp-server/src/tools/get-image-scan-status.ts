@@ -1,16 +1,11 @@
 import {
-  BatchGetImageCommand,
   DescribeImageScanFindingsCommand,
   DescribeImagesCommand,
   type ECRClient,
 } from "@aws-sdk/client-ecr";
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
-
-const INDEX_MEDIA_TYPES = [
-  "application/vnd.oci.image.index.v1+json",
-  "application/vnd.docker.distribution.manifest.list.v2+json",
-];
+import { getIndexChildren, isIndex } from "../ecr.js";
 
 const inputSchema = z
   .object({
@@ -41,14 +36,6 @@ const outputSchema = z.object({
   ),
 });
 
-type IndexManifest = {
-  manifests?: {
-    digest: string;
-    platform?: { os?: string; architecture?: string };
-    annotations?: Record<string, string>;
-  }[];
-};
-
 // Lessons 3 and 9 of docs/manual-run.md: an image index is never scanned itself,
 // and findings keep arriving until the scan status is ACTIVE.
 export function registerGetImageScanStatus(server: McpServer, ecr: ECRClient): void {
@@ -76,25 +63,12 @@ export function registerGetImageScanStatus(server: McpServer, ecr: ECRClient): v
       }
 
       const mediaType = detail.imageManifestMediaType ?? "unknown";
-      const isIndex = INDEX_MEDIA_TYPES.includes(mediaType);
-      let targets = [{ digest: detail.imageDigest, platform: "unknown" }];
-
-      if (isIndex) {
-        const fetched = await ecr.send(
-          new BatchGetImageCommand({
-            repositoryName,
-            imageIds: [{ imageDigest: detail.imageDigest }],
-            acceptedMediaTypes: INDEX_MEDIA_TYPES,
-          }),
-        );
-        const index = JSON.parse(fetched.images?.[0]?.imageManifest ?? "{}") as IndexManifest;
-        targets = (index.manifests ?? [])
-          .filter((m) => m.annotations?.["vnd.docker.reference.type"] !== "attestation-manifest")
-          .map((m) => ({
-            digest: m.digest,
-            platform: `${m.platform?.os ?? "unknown"}/${m.platform?.architecture ?? "unknown"}`,
-          }));
-      }
+      const index = isIndex(mediaType);
+      const targets = index
+        ? (await getIndexChildren(ecr, repositoryName, detail.imageDigest)).filter(
+            (child) => !child.isAttestation,
+          )
+        : [{ digest: detail.imageDigest, platform: "unknown" }];
 
       const images = await Promise.all(
         targets.map(async ({ digest, platform }) => {
@@ -116,7 +90,7 @@ export function registerGetImageScanStatus(server: McpServer, ecr: ECRClient): v
         }),
       );
 
-      const result = { digest: detail.imageDigest, mediaType, isIndex, images };
+      const result = { digest: detail.imageDigest, mediaType, isIndex: index, images };
       return {
         content: [{ type: "text", text: JSON.stringify(result) }],
         structuredContent: result,
