@@ -1,0 +1,28 @@
+[project]
+name = "remediation-agent"
+version = "0.1.0"
+description = "Groups and prioritizes Amazon Inspector findings for the remediation agent"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.43.123",
+]
+
+[project.scripts]
+remediation-agent = "remediation_agent.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "botocore[crt]>=1.43.123",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+]
