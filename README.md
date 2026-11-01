@@ -88,4 +88,6 @@ Baseline: fixing one package (axios, 24 findings) by hand took about 2 hours, in
 
 First agent run (Claude Code with the MCP server and the remediation skill): lodash, 5 findings – analysis, exact version bump and a documented pull request ([#1](https://github.com/hani021021/aws_inspector/pull/1)) in under 2 minutes; after merge, deploy and approved cleanup all lodash findings were `CLOSED`. Without the skill the same question produced a `^` range and no `package.json` check.
 
+Batch runs with the agent (one pull request per image, one commit per package): [#2](https://github.com/hani021021/aws_inspector/pull/2) closed 39 of 66 findings in under 5 minutes (express 4.x instead of the suggested 5.0 beta, npm removed from the runtime image), [#3](https://github.com/hani021021/aws_inspector/pull/3) moved the base image to Alpine 3.24 and closed the 27 Debian findings that had no fix. **95 → 1** active findings in total; the remaining one is a withdrawn express advisory whose only fix is a new major version. Old images are deleted by a fixed cleanup command after the agent asks and a human says yes.
+
 _To be filled after M5: time saved per finding, fix success rate, eval scores, cost per run._

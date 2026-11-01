@@ -49,7 +49,7 @@ Search the service code for how the package is used (e.g. which lodash functions
 
 ## 6. Verify
 
-- After the new image is pushed, wait until `get_image_scan_status` reports `readyForComparison: true`. Findings keep arriving while the status is `COMPLETE`.
+- After the new image is pushed, wait until `get_image_scan_status` reports `readyForComparison: true`. Findings keep arriving while the status is `COMPLETE`, and occasionally even shortly after `ACTIVE` – query again a few minutes later and report a count only once two queries agree.
 - Compare by digest: the fixed findings must be gone **and** no new findings may have appeared for the package.
 - After old images are deleted, their findings switch to `CLOSED` within minutes – check again before reporting success.
 
