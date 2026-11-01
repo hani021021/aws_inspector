@@ -1,6 +1,6 @@
 {
   "name": "demo-service",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "private": true,
   "description": "Deliberately outdated demo service used as scan target. Do not deploy publicly.",
   "main": "src/server.js",

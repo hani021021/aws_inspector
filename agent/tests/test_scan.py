@@ -6,7 +6,14 @@ INDEX = "application/vnd.oci.image.index.v1+json"
 MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 
 
+class ScanNotFoundException(Exception):
+    pass
+
+
 class FakeEcr:
+    class exceptions:
+        ScanNotFoundException = ScanNotFoundException
+
     def __init__(self, media_type, children=(), statuses=None):
         self.media_type = media_type
         self.children = children
@@ -25,6 +32,8 @@ class FakeEcr:
         return {"images": [{"imageManifest": json.dumps({"manifests": manifests})}]}
 
     def describe_image_scan_findings(self, repositoryName, imageId, maxResults):
+        if imageId["imageDigest"] not in self.statuses:
+            raise ScanNotFoundException()
         return {"imageScanStatus": {"status": self.statuses[imageId["imageDigest"]]}}
 
 
@@ -56,3 +65,12 @@ def test_not_ready_while_the_scan_is_complete_but_not_active():
 
     assert not state["ready"]
     assert "count" not in state
+
+
+def test_not_ready_right_after_the_push_when_no_scan_exists_yet():
+    ecr = FakeEcr(MANIFEST, statuses={})
+
+    state = scan_state(ecr, FakeInspector({}), "repo", "latest")
+
+    assert state["statuses"] == {"top": "PENDING"}
+    assert not state["ready"]

@@ -26,6 +26,17 @@ def scanned_manifests(ecr, repository: str, tag: str) -> list[str]:
     ]
 
 
+def _scan_status(ecr, repository: str, digest: str) -> str:
+    try:
+        response = ecr.describe_image_scan_findings(
+            repositoryName=repository, imageId={"imageDigest": digest}, maxResults=1
+        )
+    except ecr.exceptions.ScanNotFoundException:
+        # Right after a push the scan does not exist yet.
+        return "PENDING"
+    return response["imageScanStatus"]["status"]
+
+
 def scan_state(ecr, inspector, repository: str, tag: str) -> dict:
     """`ready` once every scanned manifest is ACTIVE; `count` only then.
 
@@ -33,12 +44,7 @@ def scan_state(ecr, inspector, repository: str, tag: str) -> dict:
     so the caller compares two results a few minutes apart.
     """
     digests = scanned_manifests(ecr, repository, tag)
-    statuses = {
-        d: ecr.describe_image_scan_findings(
-            repositoryName=repository, imageId={"imageDigest": d}, maxResults=1
-        )["imageScanStatus"]["status"]
-        for d in digests
-    }
+    statuses = {d: _scan_status(ecr, repository, d) for d in digests}
     ready = all(s == "ACTIVE" for s in statuses.values())
     state = {"repository": repository, "tag": tag, "digests": digests, "statuses": statuses}
     if not ready:

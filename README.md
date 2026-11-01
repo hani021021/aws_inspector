@@ -5,7 +5,7 @@ find → analyze → bump package → open PR → deploy → clean up old ECR im
 
 Built with Claude (Anthropic API), an MCP server, agent skills and an eval suite, deployed serverless on AWS.
 
-> Status: ✅ M3 – agent fixes all findings of an image in one pull request (95 → 1 findings in the sandbox) · 🚧 M4 evals · next: M5 serverless deployment
+> Status: ✅ M3 – agent fixes all findings of an image in one pull request (95 → 1 findings in the sandbox) · ✅ M5a – after every push of `latest`, AWS verifies the scan, e-mails a cleanup plan and deletes old images on approval · 🚧 M4 evals
 
 ## The problem
 
@@ -79,7 +79,8 @@ Tests and lint: `uv run pytest`, `uv run ruff check .`
 - [x] **M2** Analysis and prioritization – findings grouped per package, source classified, ranked
 - [x] **M3** Fix agent – remediation skill, one pull request per image, approved cleanup
 - [ ] **M4** Evals – cases from observed mistakes, with vs. without skill ([evals/](evals/)); later CI gate
-- [ ] **M5** Serverless deployment – EventBridge, Step Functions, Lambda; choose Claude API or Bedrock
+- [x] **M5a** Serverless workflow (`infra/`, AWS CDK) – EventBridge on push of `latest` → Step Functions: wait for a stable scan, plan cleanup, approval by e-mail, delete, report; DynamoDB audit log; one Lambda per step with least privilege
+- [ ] **M5b** Model in the loop – analysis and pull requests in AWS; choose Claude API or Bedrock
 - [ ] **M6** Case study and demo
 
 ## Results
@@ -89,6 +90,8 @@ Baseline: fixing one package (axios, 24 findings) by hand took about 2 hours, in
 First agent run (Claude Code with the MCP server and the remediation skill): lodash, 5 findings – analysis, exact version bump and a documented pull request ([#1](https://github.com/hani021021/aws_inspector/pull/1)) in under 2 minutes; after merge, deploy and approved cleanup all lodash findings were `CLOSED`. Without the skill the same question produced a `^` range and no `package.json` check.
 
 Batch runs with the agent (one pull request per image, one commit per package): [#2](https://github.com/hani021021/aws_inspector/pull/2) closed 39 of 66 findings in under 5 minutes (express 4.x instead of the suggested 5.0 beta, npm removed from the runtime image), [#3](https://github.com/hani021021/aws_inspector/pull/3) moved the base image to Alpine 3.24 and closed the 27 Debian findings that had no fix. **95 → 1** active findings in total; the remaining one is a withdrawn express advisory whose only fix is a new major version. Old images are deleted by a fixed cleanup command after the agent asks and a human says yes.
+
+Serverless workflow: a push of `latest` (1.0.6) started the state machine; 4½ minutes later – scan stable, plan e-mailed, approved with one click – the three entries of 1.0.5 were deleted and the decision was recorded in DynamoDB. The first run failed because the scan did not exist yet seconds after the push; the Lambda now treats that as pending.
 
 Evals ([evals/](evals/README.md)), first run, one trial per case: **with skill 100 %, without skill 91 %**. Only one of the four observed mistakes (reporting a finding count too early) reproduces in isolation; the others appeared in long sessions with live data. Next: harder, more realistic cases and several trials per case.
 
