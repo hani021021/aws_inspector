@@ -86,4 +86,6 @@ Tests and lint: `uv run pytest`, `uv run ruff check .`
 
 Baseline: fixing one package (axios, 24 findings) by hand took about 2 hours, including one failed attempt.
 
+First agent run (Claude Code with the MCP server and the remediation skill): lodash, 5 findings – analysis, exact version bump and a documented pull request ([#1](https://github.com/hani021021/aws_inspector/pull/1)) in under 2 minutes; after merge, deploy and approved cleanup all lodash findings were `CLOSED`. Without the skill the same question produced a `^` range and no `package.json` check.
+
 _To be filled after M5: time saved per finding, fix success rate, eval scores, cost per run._
