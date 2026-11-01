@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "aws-inspector": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/mcp-server/dist/index.js"],
+      "env": {
+        "AWS_PROFILE": "${AWS_PROFILE:-inspector}",
+        "AWS_REGION": "${AWS_REGION:-eu-north-1}",
+        "PROTECTED_TAGS": "${PROTECTED_TAGS:-latest}"
+      }
+    }
+  }
+}
