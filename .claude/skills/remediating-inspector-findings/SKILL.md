@@ -55,6 +55,7 @@ Search the service code for how the package is used (e.g. which lodash functions
 - Use the deletion plan from `list_images`. Images with a protected tag (default `latest`) run in production and are never deleted; when no image carries one, delete nothing.
 - Delete image indexes before their child manifests.
 - Deleting always needs explicit human approval.
+- Commands you hand to a human must be safe to copy as they are: name the AWS profile and region explicitly in every AWS CLI command and never rely on defaults – the default profile may belong to another account.
 
 ## Report format
 

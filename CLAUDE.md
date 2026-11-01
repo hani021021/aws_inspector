@@ -5,7 +5,7 @@ Remediation agent for Amazon Inspector findings in ECR images. Start with [READM
 ## Environment rules
 
 - Never change the global npm configuration (no `npm config fix`, `npm config set`, edits to the user `.npmrc`) – it belongs to another project. Run npm with an empty user config instead: `$env:npm_config_userconfig = "$env:TEMP\empty.npmrc"` (PowerShell), or `--userconfig` on single commands.
-- AWS only through the sandbox profile: `AWS_PROFILE=inspector`, `AWS_REGION=eu-north-1`, and `EXPECTED_AWS_ACCOUNT_ID` set. The default AWS profile is a different account – never fall back to it, and never fill in the account ID yourself.
+- AWS only through the sandbox profile: `AWS_PROFILE=inspector`, `AWS_REGION=eu-north-1`, and `EXPECTED_AWS_ACCOUNT_ID` set. The default AWS profile is a different account – never fall back to it, and never fill in the account ID yourself. Every AWS CLI command you run or print includes `--profile inspector --region eu-north-1`.
 - Never use code, data or details from customer projects.
 - Deleting ECR images, pushing images and pushing to git need explicit approval.
 
