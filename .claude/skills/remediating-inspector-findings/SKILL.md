@@ -41,7 +41,10 @@ Search the service code for how the package is used (e.g. which lodash functions
 
 - Pin the exact version, never `^` or `~`:
   `npm install <package>@<version> --save-exact --package-lock-only --ignore-scripts`
-- One package per change, so a failing build points to one cause.
+- Fix all fixable findings of the image in one run and one pull request, with **one commit per package** (plus one for the base image). A failing build then points to a single commit that can be reverted without losing the rest.
+- Breaking changes (new major version): check the changelog and how the code uses the package. Include the bump only if the code is compatible or you adapt it in the same commit; otherwise leave it out and list it as a decision for the reviewer.
+- Base image: move to the newest patch of the same runtime major version. If vulnerable packages come only from tooling the service does not need at runtime (e.g. the bundled npm), removing that tooling from the final image is a valid fix – explain it in the PR.
+- Build the image locally before opening the pull request.
 - Changes reach production only through a reviewed pull request and the existing pipeline.
 
 ## 6. Verify
@@ -65,4 +68,4 @@ One row per package, highest priority first:
 |---|---|---|---|---|---|
 | example-lib | transitive (via web-framework) | 2.3.1 → 2.3.4 | 3 findings | no | 2.3.3 has its own CVE; affected function not used |
 
-Then the exact commands, and anything left open (no fix, base image, needs a decision).
+Then the exact commands, and anything left open (no fix available, needs a decision). End with the expected finding count after deployment, so verification has a target.
