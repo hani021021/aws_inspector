@@ -1,0 +1,50 @@
+# Builds the demo service after every merge to main and pushes it to Amazon ECR as
+# `latest` plus the short commit hash. The push of `latest` starts the AWS cleanup
+# workflow (infra/), which asks for approval before deleting old images.
+name: Build demo-service
+
+on:
+  push:
+    branches: [main]
+    paths: ["sandbox/demo-service/**"]
+  workflow_dispatch:
+
+# Only the permissions this job needs: read the code, request an OIDC token for AWS.
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: build-demo-service
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      REPOSITORY: demo-service
+    steps:
+      # Third-party actions are pinned to commit hashes: tags can be moved to other code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Sign in to AWS (OIDC, no stored keys)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_PUSH_ROLE_ARN }}
+          aws-region: eu-north-1
+          mask-aws-account-id: true
+
+      - name: Sign in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+
+      - name: Build and push
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.REPOSITORY }}
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          docker build -t "$IMAGE:$SHORT_SHA" -t "$IMAGE:latest" sandbox/demo-service
+          # The commit tag first, so `latest` only moves once the image is in ECR.
+          docker push "$IMAGE:$SHORT_SHA"
+          docker push "$IMAGE:latest"
+          echo "Pushed $REPOSITORY:$SHORT_SHA as latest" >> "$GITHUB_STEP_SUMMARY"

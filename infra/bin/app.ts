@@ -19,4 +19,5 @@ new RemediationStack(app, "InspectorRemediation", {
   env: { account, region: process.env.AWS_REGION ?? "eu-north-1" },
   repositoryName: "demo-service",
   notifyEmail,
+  githubRepository: "hani021021/aws_inspector",
 });

@@ -6,7 +6,7 @@ import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { Repository } from "aws-cdk-lib/aws-ecr";
 import { Rule } from "aws-cdk-lib/aws-events";
 import { SfnStateMachine } from "aws-cdk-lib/aws-events-targets";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { OidcProviderNative, PolicyStatement, Role, WebIdentityPrincipal } from "aws-cdk-lib/aws-iam";
 import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Topic } from "aws-cdk-lib/aws-sns";
@@ -32,6 +32,8 @@ export interface RemediationStackProps extends StackProps {
   repositoryName: string;
   /** Receives approval requests and results. */
   notifyEmail: string;
+  /** GitHub repository ("owner/name") whose main branch may push images. */
+  githubRepository: string;
 }
 
 // The Python package in agent/src is the code of every Lambda; boto3 comes with the runtime.
@@ -204,6 +206,27 @@ export class RemediationStack extends Stack {
     });
 
     new CfnOutput(this, "WorkflowArn", { value: stateMachine.stateMachineArn });
+
+    // --- CI: GitHub Actions pushes images without stored AWS keys (OIDC) ---
+
+    const github = new OidcProviderNative(this, "GitHubOidc", {
+      url: "https://token.actions.githubusercontent.com",
+      clientIds: ["sts.amazonaws.com"],
+    });
+    const pushRole = new Role(this, "GitHubPushRole", {
+      description: `GitHub Actions on ${props.githubRepository}@main pushes ${props.repositoryName} images`,
+      maxSessionDuration: Duration.hours(1),
+      assumedBy: new WebIdentityPrincipal(github.oidcProviderArn, {
+        StringEquals: {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          // Only workflow runs on the main branch of this repository, never forks or pull requests.
+          "token.actions.githubusercontent.com:sub": `repo:${props.githubRepository}:ref:refs/heads/main`,
+        },
+      }),
+    });
+    repository.grantPullPush(pushRole);
+
+    new CfnOutput(this, "GitHubPushRoleArn", { value: pushRole.roleArn });
   }
 
   private pythonFunction(id: string, handler: string, environment?: Record<string, string>): Function {
