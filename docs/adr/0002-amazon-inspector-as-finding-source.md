@@ -23,7 +23,7 @@ Cost safeguards:
 - Covers both operating system packages and language packages (npm), matching what the agent has to fix.
 - `ListFindings` also returns `CLOSED` findings of deleted images; every query must filter on status and image digest.
 - An image index (BuildKit default) reports `UNSUPPORTED_IMAGE`; Inspector scans its untagged child manifest instead, so findings must be looked up by digest, not by tag.
-- Inspector stops reporting OS findings for a discontinued OS 12 months after end of support (e.g. Alpine 3.18). The demo image therefore uses a supported Debian base.
+- Inspector stops reporting OS findings for a discontinued OS 12 months after end of support (e.g. Alpine 3.18). The demo image therefore pins a supported Alpine release (`node:<version>-alpine3.24`). For Alpine, Inspector reports only vulnerabilities the vendor has fixed (Debian also reports open ones), so a missing OS finding means "no pending upgrade", not "no known CVE".
 - Findings fall into three sources, identified by `filePath`: direct dependencies, transitive dependencies (`/app/node_modules/…`), and the base image (`/usr/local/lib/node_modules/npm/…`, OS packages). Only the first two can be fixed in `package.json`.
 - Verification uses Inspector itself: findings of a deleted image switch to `CLOSED`.
 
