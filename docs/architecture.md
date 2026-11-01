@@ -4,13 +4,13 @@
 
 | # | Step | Automated by | Owner |
 |---|---|---|---|
-| 1 | Fetch findings (ECR / Lambda, fix available) | Inspector API | Code |
-| 2 | Analyze: package, direct vs. transitive, prod vs. dev, relevance | Analysis sub-agent | Claude |
+| 1 | Fetch active findings (ECR container images, fix available) | Amazon Inspector API – see [ADR 0002](adr/0002-amazon-inspector-as-finding-source.md) | Code |
+| 2 | Analyze: package, direct vs. transitive vs. base image, prod vs. dev, relevance | Analysis sub-agent | Claude |
 | 3 | Determine fixed version, check changelog for breaking changes | Inspector data + analysis sub-agent | Code + Claude |
 | 4 | Bump package (incl. `overrides` for transitive deps), run tests, open PR | Fix sub-agent + skills | Claude |
 | 5 | Deploy | PR merge = human approval, then existing CI/CD | Human + CI |
 | 6 | Delete outdated ECR images that are no longer in use | Cleanup step | Code (+ approval) |
-| 7 | Verify finding is closed after rescan, write report | Verification step | Code + Claude |
+| 7 | Verify findings of the old image are `CLOSED` and absent from the new image, write report | Verification step | Code + Claude |
 
 ## Flow
 
