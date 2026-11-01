@@ -25,7 +25,26 @@ It is time-consuming, easy to postpone and requires context switching between In
 
 ![How it works: detect, analyze and fix, approve, build and push, clean up](docs/architecture.svg)
 
-Details in [docs/architecture.md](docs/architecture.md). Before automating, the loop was run once by hand – the [manual baseline run](docs/manual-run.md) lists the edge cases the agent has to handle.
+### Technical architecture
+
+![Technical architecture with AWS services, GitHub and the authentication between them](docs/architecture-detailed.svg)
+
+Grey arrows are API calls and data, purple dashed arrows are authentication, green arrows are human approvals.
+
+| # | What happens | How it authenticates |
+|---|---|---|
+| 1 | Amazon Inspector continuously scans the images in Amazon ECR | AWS service |
+| 2 | The agent reads findings through the MCP server (read-only) | `aws login` session; the server checks the account with AWS STS |
+| 3 | It checks the target version at OSV.dev | public API |
+| 4 | It pushes a branch and opens a pull request | gh CLI OAuth token |
+| 5 | The reviewer reviews and merges | GitHub account |
+| 6–7 | GitHub Actions starts and gets an OIDC token | OIDC → AWS STS `AssumeRoleWithWebIdentity` → IAM role `GitHubPushRole`, 1 hour |
+| 8 | It pushes the image as `:<sha>` and `:latest` | that role (ECR push only) |
+| 9–11 | Amazon EventBridge starts AWS Step Functions, which invokes AWS Lambda | one IAM execution role per Lambda |
+| 12–13 | Amazon SNS e-mails the cleanup plan; the reviewer approves on Amazon API Gateway | Step Functions task token, POST only |
+| 14 | The DeleteImages Lambda deletes the old images; the decision goes to Amazon DynamoDB | `ecr:BatchDeleteImage` on demo-service only |
+
+The diagram is code: [docs/diagrams/architecture.py](docs/diagrams/architecture.py) (`uv run docs/diagrams/architecture.py`; official AWS architecture icons). Operations around it: AWS CDK / AWS CloudFormation deploys everything, Amazon CloudWatch Logs keeps one week of logs, AWS Budgets alerts on any cost. More in [docs/architecture.md](docs/architecture.md). Before automating, the loop was run once by hand – the [manual baseline run](docs/manual-run.md) lists the edge cases the agent has to handle.
 
 ## MCP server
 
