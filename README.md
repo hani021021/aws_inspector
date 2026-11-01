@@ -66,7 +66,7 @@ Tests and lint: `uv run pytest`, `uv run ruff check .`
 |---|---|
 | `agent/` | Python – orchestrator and sub-agents (Anthropic SDK) |
 | `mcp-server/` | TypeScript – MCP server with read-only AWS tools (Inspector, ECR) |
-| `skills/` | Agent skills – remediation playbooks |
+| `.claude/skills/` | Agent skills – remediation playbook ([remediating-inspector-findings](.claude/skills/remediating-inspector-findings/SKILL.md)) |
 | `infra/` | AWS CDK – Step Functions, Lambda, DynamoDB |
 | `sandbox/` | Deliberately vulnerable demo service + ECR repository |
 | `evals/` | Golden dataset and eval runner |
