@@ -20,13 +20,13 @@ def sts_account(monkeypatch):
 
 
 def test_accepts_the_expected_account(sts_account):
-    sts_account("066899194919")
+    sts_account("123456789012")
 
-    assert inspector.verify_account("066899194919") == "066899194919"
+    assert inspector.verify_account("123456789012") == "123456789012"
 
 
 def test_refuses_any_other_account(sts_account):
     sts_account("111111111111")
 
     with pytest.raises(inspector.WrongAccountError, match="111111111111"):
-        inspector.verify_account("066899194919")
+        inspector.verify_account("123456789012")

@@ -7,6 +7,7 @@
       "env": {
         "AWS_PROFILE": "${AWS_PROFILE:-inspector}",
         "AWS_REGION": "${AWS_REGION:-eu-north-1}",
+        "EXPECTED_AWS_ACCOUNT_ID": "${EXPECTED_AWS_ACCOUNT_ID}",
         "PROTECTED_TAGS": "${PROTECTED_TAGS:-latest}"
       }
     }

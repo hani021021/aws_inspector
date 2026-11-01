@@ -46,7 +46,19 @@ aws login --profile inspector   # any profile with Inspector/ECR read access
 claude                          # approve the project MCP server "aws-inspector"
 ```
 
-Configuration (`.mcp.json`): `AWS_PROFILE` (default `inspector`), `AWS_REGION` (default `eu-north-1`), `PROTECTED_TAGS` (default `latest`). Unit tests: `npm test` in `mcp-server/`.
+Configuration (`.mcp.json`): `AWS_PROFILE` (default `inspector`), `AWS_REGION` (default `eu-north-1`), `PROTECTED_TAGS` (default `latest`) and `EXPECTED_AWS_ACCOUNT_ID` (required). The server refuses to start when the credentials belong to any other account, so a missing profile can never fall back to a different account. Unit tests: `npm test` in `mcp-server/`.
+
+## Agent core (Python)
+
+`agent/` groups active findings per package, tells direct, transitive and base-image packages apart and ranks them, so the model only sees one compact entry per package (71 findings → 18 packages, about 9× less context):
+
+```bash
+cd agent
+EXPECTED_AWS_ACCOUNT_ID=<account-id> AWS_PROFILE=inspector uv run remediation-agent summarize \
+  --repository demo-service --package-json ../sandbox/demo-service/package.json
+```
+
+Tests and lint: `uv run pytest`, `uv run ruff check .`
 
 ## Repository layout
 
