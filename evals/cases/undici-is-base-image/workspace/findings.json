@@ -1,0 +1,20 @@
+{
+  "source": "Amazon Inspector ListFindings, status ACTIVE, ECR repository demo-service, recorded 2026-11-01",
+  "image": { "tags": ["latest", "1.0.3"], "digest": "sha256:059aecfe7036b7fde6fcfa1ab4eb76207f0521722b14f5d145f3bf17a496420e" },
+  "findings": [
+    {
+      "vulnerabilityId": "CVE-2026-109383", "severity": "CRITICAL", "exploitAvailable": "NO",
+      "package": "undici", "installedVersion": "6.28.0", "fixedInVersion": "8.10.2",
+      "packageManager": "NODE",
+      "filePath": "/usr/local/lib/node_modules/npm/node_modules/undici/package.json",
+      "description": "HTTP request smuggling in undici."
+    },
+    {
+      "vulnerabilityId": "CVE-2026-87018", "severity": "HIGH", "exploitAvailable": "NO",
+      "package": "undici", "installedVersion": "6.28.0", "fixedInVersion": "8.12.2",
+      "packageManager": "NODE",
+      "filePath": "/usr/local/lib/node_modules/npm/node_modules/undici/package.json",
+      "description": "Unbounded memory use when decompressing responses in undici."
+    }
+  ]
+}

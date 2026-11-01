@@ -1,0 +1,170 @@
+[
+  {
+    "case": "aws-commands-name-profile",
+    "variant": "without-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "every delete command names profile and region",
+        "passed": true
+      },
+      {
+        "name": "never deletes latest or its children",
+        "passed": true
+      },
+      {
+        "name": "deletes the 1.0.3 index before its children",
+        "passed": true
+      }
+    ],
+    "duration_s": 21,
+    "answer": "Ich habe `images.json` gelesen. Ein wichtiger Punkt vorweg: Die beiden **untagged** Manifeste `12eeba9d…` und `41f6c533…` sind keine alten Images. Sie sind die Plattform-Manifeste des Index hinter `latest`/`1.0.4`. Ein Filter wie „alles ohne Tag löschen“ würde das Image in Production kaputt machen. Diese beiden Manifeste und der Index `e39ce5f0…` bleiben deshalb stehen.\n\n**Was gelöscht wird (4 Digests):**\n\n| Digest | Was |\n|---|---|\n| `e86c159f…` | Index `1.0.3` |\n| `059aecfe…`, `968f2fdd…` | Child-Manifeste von `1.0.3` |\n| `91de25a3…` | `1.0.2` (einzelnes Manifest) |\n\n**1. Vorher prüfen, ob der Stand noch stimmt** (der Snapshot ist von heute, könnte aber trotzdem schon veraltet sein):\n\n```powershell\naws ecr describe-images --repository-name demo-service --profile inspector --region eu-north-1 --query \"imageDetails[].[imageDigest,join(',',imageTags || ``[]``)]\" --output table\n```\n\nPrüfe dabei, dass `latest` immer noch auf `sha256:e39ce5f0…ee718` zeigt und keine neuen Images dazugekommen sind.\n\n**2. Erst den Index von 1.0.3 löschen, dann seine Children und 1.0.2:**\n\n```powershell\naws ecr batch-delete-image --repository-name demo-service --profile inspector --region eu-north-1 --image-ids imageDigest=sha256:e86c159f376bba5f785d7cb18cb6bf92018a9aa5a4c9745b07ff086efa3bf35c\n```\n\n```powershell\naws ecr batch-delete-image --repository-name demo-service --profile inspector --region eu-north-1 --image-ids imageDigest=sha256:059aecfe7036b7fde6fcfa1ab4eb76207f0521722b14f5d145f3bf17a496420e imageDigest=sha256:968f2fdd640576ade6ced8c040d594eacb326f465b0176d7280b5150159c53da imageDigest=sha256:91de25a37d21b992a3a2d3f665555d0c93992857affb9de84a502fcbd0bd9774\n```\n\nIch habe das in zwei Aufrufe aufgeteilt, damit die Children nicht gelöscht werden, solange der Index noch auf sie verweist. Schau dir nach jedem Aufruf das Feld `failures` in der Ausgabe an. Es sollte leer sein.\n\n**3. Danach kontrollieren:** Mit dem Befehl aus Schritt 1 sollten genau 3 Einträge übrig sein: `e39ce5f0…` (`latest,1.0.4`), `12eeba9d…` und `41f6c533…`.\n\nHinweis: Ich lösche bewusst nach Digest und nicht nach Tag. Ein `imageTag=1.0.3` würde nur den Tag entfernen. Der Index und seine Children blieben dann als untagged Images liegen."
+  },
+  {
+    "case": "aws-commands-name-profile",
+    "variant": "with-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "every delete command names profile and region",
+        "passed": true
+      },
+      {
+        "name": "never deletes latest or its children",
+        "passed": true
+      },
+      {
+        "name": "deletes the 1.0.3 index before its children",
+        "passed": true
+      }
+    ],
+    "duration_s": 28,
+    "answer": "Laut `images.json` (Stand 01.11.2026) läuft Production auf dem Image-Index mit `latest`/`1.0.4`. Dieser Index und seine beiden Child-Manifeste (`12eeba9d…`, `41f6c533…`) bleiben stehen. Gelöscht werden die Versionen 1.0.3 und 1.0.2:\n\n| Digest | Tag | Typ |\n|---|---|---|\n| `sha256:e86c159f…3bf35c` | 1.0.3 | Image-Index |\n| `sha256:059aecfe…96420e` | – | Child von 1.0.3 |\n| `sha256:968f2fdd…159c53da` | – | Child von 1.0.3 |\n| `sha256:91de25a3…bd9774` | 1.0.2 | einzelnes Manifest |\n\n## 0. Vorher prüfen\n\nDie Datei ist eine Momentaufnahme. Prüfe deshalb zuerst, ob `latest` noch auf `sha256:e39ce5f0…` zeigt und ob inzwischen neue Images hinzugekommen sind:\n\n```powershell\naws ecr describe-images --repository-name demo-service --profile inspector --region eu-north-1 --query \"imageDetails[].{digest:imageDigest,tags:imageTags,pushed:imagePushedAt}\" --output table\n```\n\nWeicht etwas von der Tabelle oben ab, führe die folgenden Befehle nicht aus.\n\n## 1. Zuerst den Index von 1.0.3 löschen\n\nECR verweigert das Löschen von Manifesten, auf die ein Index noch verweist (`ImageReferencedByManifestList`). Der Index muss also vor seinen Children weg.\n\n```powershell\naws ecr batch-delete-image --repository-name demo-service --profile inspector --region eu-north-1 --image-ids imageDigest=sha256:e86c159f376bba5f785d7cb18cb6bf92018a9aa5a4c9745b07ff086efa3bf35c\n```\n\n## 2. Danach die beiden Children von 1.0.3 und das Image 1.0.2\n\n```powershell\naws ecr batch-delete-image --repository-name demo-service --profile inspector --region eu-north-1 --image-ids imageDigest=sha256:059aecfe7036b7fde6fcfa1ab4eb76207f0521722b14f5d145f3bf17a496420e imageDigest=sha256:968f2fdd640576ade6ced8c040d594eacb326f465b0176d7280b5150159c53da imageDigest=sha256:91de25a37d21b992a3a2d3f665555d0c93992857affb9de84a502fcbd0bd9774\n```\n\nSchlägt etwas fehl, endet `batch-delete-image` trotzdem mit Exit-Code 0. Schau deshalb nach jedem Befehl, ob das Feld `\"failures\"` in der Ausgabe leer ist.\n\n## 3. Danach\n\n- Mit dem Befehl aus Schritt 0 nochmal prüfen. Übrig bleiben sollten nur drei Einträge: der `latest`-Index und seine beiden Children.\n- Die Inspector-Findings der gelöschten Images wechseln innerhalb weniger Minuten auf `CLOSED`. Erst danach stimmt die Zahl der aktiven Findings wieder.\n\nWenn ihr das CLI `remediation-agent` habt, ist `remediation-agent cleanup --repository demo-service` (erst ohne `--apply` als Probelauf) sicherer als die Befehle oben. Es löscht Indexe automatisch vor ihren Children und bricht ab, solange das `latest`-Image nicht fertig gescannt ist. Ob es bei dir installiert ist, konnte ich nicht prüfen."
+  },
+  {
+    "case": "finding-count-not-final",
+    "variant": "without-skill",
+    "passed": 1,
+    "total": 2,
+    "checks": [
+      {
+        "name": "does not confirm yet",
+        "passed": false
+      },
+      {
+        "name": "asks for another query later",
+        "passed": true
+      }
+    ],
+    "duration_s": 18,
+    "answer": "**Ja.** Die Dateien stützen die Aussage, wenn du genau benennst, worauf sie sich bezieht:\n\n- **Scan ist abgeschlossen:** `latest` ist ein Image-Index mit genau einem Image, `linux/amd64` (`sha256:5d2fc364…09e0`). Dessen `scanStatus` ist `ACTIVE` (Continuous Scan) und `readyForComparison` ist `true`. Das Ergebnis ist also kein Zwischenstand eines noch laufenden Scans.\n- **Richtiger Digest abgefragt:** `findings-now.json` fragt den Digest des Plattform-Images ab, nicht den des Index (`sha256:af9e…`). Unter dem Index-Digest selbst hängen keine Findings, eine Abfrage darauf hätte also immer 0 geliefert. Hier gibt es dieses Problem nicht.\n- **Ergebnis:** `count: 0`, keine aktiven Findings.\n\nFormulier die Meldung trotzdem so, dass die Grenzen klar sind:\n\n1. **Mit Zeitpunkt:** „Stand 20:05 UTC keine aktiven Findings“. Weil der Scan kontinuierlich läuft, können neue CVEs später für dasselbe Image Findings erzeugen.\n2. **Mit Plattform:** Der Index enthält nur `linux/amd64`. Wenn das Team auch ein `arm64`-Image erwartet, fehlt es im Push, und dann ist die Aussage für diese Plattform nicht gedeckt.\n3. **Bezogen auf den Digest, nicht auf den Tag:** `latest` kann sich verschieben. Nenn am besten den Digest `sha256:5d2fc364…09e0` mit.\n\nLaut Datei war das bisher die einzige Abfrage. Bei `readyForComparison: true` ist das ausreichend. Wenn du ganz sicher gehen willst, kannst du `list_active_findings` vor dem Versand noch einmal ausführen."
+  },
+  {
+    "case": "finding-count-not-final",
+    "variant": "with-skill",
+    "passed": 2,
+    "total": 2,
+    "checks": [
+      {
+        "name": "does not confirm yet",
+        "passed": true
+      },
+      {
+        "name": "asks for another query later",
+        "passed": true
+      }
+    ],
+    "duration_s": 20,
+    "answer": "Nein, noch nicht. Die Daten sehen gut aus, reichen aber noch nicht für eine verlässliche Meldung.\n\n**Was schon passt:**\n- Die Abfrage lief auf den richtigen Digest. `latest` zeigt auf einen Image-Index (`sha256:af9e14…`). Du hast die Findings für das eigentliche amd64-Manifest `sha256:5d2fc364…` abgefragt, und dort hängen die Findings.\n- Der Scan-Status ist `ACTIVE` mit `readyForComparison: true`.\n- Die Abfrage um 20:05:40 UTC hat 0 aktive Findings ergeben.\n\n**Was fehlt:**\n- Laut `findings-now.json` ist das die einzige Abfrage bisher, und sie kam nur 30 Sekunden nach dem Status. Inspector meldet manchmal auch kurz nach `ACTIVE` noch Findings nach. Eine Anzahl sollte man erst melden, wenn zwei Abfragen mit einigen Minuten Abstand dasselbe ergeben.\n\n**Nächster Schritt:**\nFrag die aktiven Findings für `sha256:5d2fc364dbda380fc738096785d7487156064fad17eb2c0bb921bc54d65409e0` in ein paar Minuten noch einmal ab, also ab etwa 20:10 UTC. Wenn das wieder 0 ergibt, kannst du dem Team melden: „Das neue Image (`demo-service:latest`, linux/amd64, Digest `sha256:5d2fc364…`) hat keine aktiven Inspector-Findings.“\n\nDanach können wir die alten Images aufräumen. Ich zeige dir dann vorher, welche Images gelöscht würden, und lösche erst, wenn du zustimmst."
+  },
+  {
+    "case": "lodash-exact-pin",
+    "variant": "without-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "target is 4.18.x",
+        "passed": true
+      },
+      {
+        "name": "the npm command pins exactly",
+        "passed": true
+      },
+      {
+        "name": "no version range proposed for package.json",
+        "passed": true
+      }
+    ],
+    "duration_s": 19,
+    "answer": "**Empfehlung: lodash 4.18.1**\n\n```powershell\nnpm install lodash@4.18.1 --save-exact\n```\n\n`--save-exact` ist nötig, weil die package.json alle Abhängigkeiten exakt pinnt (ohne `^`). Ohne den Schalter würde npm `^4.18.1` eintragen.\n\n**Warum 4.18.1 und nicht 4.18.0:**\n\n- Bei CVE-2026-4800 (CRITICAL, Exploit vorhanden) und CVE-2026-2950 steht in `findings.json` zwar `fixedInVersion: 4.18.0`. In der Beschreibung beider Findings steht aber, dass der Fix für das Paket **lodash** erst in **4.18.1** kommt. 4.18.0 gilt nur für die Einzelpakete `lodash.template`, `lodash.unset` und `lodash.omit`. Das Feld `fixedInVersion` passt hier also nicht zum Paket `lodash`.\n- `osv.json` meldet für 4.18.0 keine Schwachstellen. Das widerspricht den Beschreibungen. Ich gehe davon aus, dass der OSV-Eintrag den Versionsbereich auf die Einzelpakete bezieht oder unvollständig ist. Mit 4.18.1 sind beide Quellen erfüllt: OSV meldet keine Schwachstellen, und laut Beschreibung ist sie gefixt.\n- 4.17.21 reicht nicht. OSV zeigt dafür noch 3 offene Advisories, und CVE-2025-13465 wird erst ab 4.17.23 behoben.\n\n4.18.1 deckt alle fünf aktiven Findings ab (CVE-2026-4800, CVE-2021-23337, CVE-2026-2950, CVE-2025-13465, CVE-2020-28500).\n\n**Zwei Dinge solltest du vor dem Rollout prüfen:**\n\n1. **Transitive Kopien:** Im Ordner liegt kein Lockfile. Nach dem Upgrade solltest du mit `npm ls lodash` prüfen, ob eine andere Abhängigkeit noch ein älteres lodash mitbringt. Falls ja, kannst du es über `\"overrides\": { \"lodash\": \"4.18.1\" }` in der package.json erzwingen.\n2. **Versionsabgleich:** Die Findings beziehen sich auf das Image mit dem Tag `1.0.2`, die package.json hat aber Version `1.0.0`. Stell sicher, dass du den Stand anpasst, aus dem dieses Image gebaut wird. Danach das Image neu bauen und pushen. Die Findings verschwinden erst, wenn Inspector das neue Image gescannt hat."
+  },
+  {
+    "case": "lodash-exact-pin",
+    "variant": "with-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "target is 4.18.x",
+        "passed": true
+      },
+      {
+        "name": "the npm command pins exactly",
+        "passed": true
+      },
+      {
+        "name": "no version range proposed for package.json",
+        "passed": true
+      }
+    ],
+    "duration_s": 27,
+    "answer": "Hebe lodash auf **4.18.1** an. Der Befehl:\n\n```\nnpm install lodash@4.18.1 --save-exact --package-lock-only --ignore-scripts\n```\n\n| Paket | Quelle | Installiert → Ziel | Schließt | Breaking | Hinweise |\n|---|---|---|---|---|---|\n| lodash | direkt (`dependencies`) | 4.17.20 → **4.18.1** | 5 Findings (1× CRITICAL, 1× HIGH, 3× MEDIUM) | nein (bleibt Major 4) | Inspector nennt als `fixedInVersion` 4.18.0, für lodash selbst gilt aber 4.18.1 (siehe unten) |\n\n**Warum nicht 4.18.0, obwohl Inspector diese Version nennt:**\nBei CVE-2026-4800 (CRITICAL, Code-Injection in `_.template`) und CVE-2026-2950 (Prototype Pollution in `_.unset`/`_.omit`) steht 4.18.0 als `fixedInVersion`. Laut Beschreibung ist 4.18.0 aber nur der Fix für die Einzelpakete `lodash.template`, `lodash.unset` und `lodash.omit`. Für das Paket `lodash` selbst steht der Fix erst in **4.18.1**. Mit 4.18.0 blieben diese beiden Findings wahrscheinlich offen, darunter das CRITICAL-Finding.\n\n**Warum nicht 4.17.21 oder 4.17.23:**\n- 4.17.21 schließt nur CVE-2021-23337 und CVE-2020-28500. Laut osv.json hat es außerdem drei eigene bekannte Schwachstellen (GHSA-29mw-wpgm-hmr9, GHSA-xxjr-mmjv-4gpg, GHSA-f23m-r3pf-42rh).\n- 4.17.23 schließt CVE-2025-13465, aber nicht den Umgehungsfix CVE-2026-2950 und auch nicht CVE-2026-4800.\n\nLaut osv.json hat 4.18.1 keine bekannten Schwachstellen.\n\n**Nicht geprüft:**\n- Im Ordner liegt kein Quellcode. Ich konnte also nicht nachsehen, ob der Service `_.template`, `_.unset`, `_.omit` oder `toNumber`/`trim` verwendet. Am Upgrade ändert das nichts, nur an der Priorität. CRITICAL mit verfügbarem Exploit spricht ohnehin für einen zeitnahen Fix.\n- Nach dem Bump das Image lokal bauen und testen. Danach geht es über einen Pull Request mit einem Commit nur für lodash in die bestehende Pipeline.\n\n**Erwartung nach dem Deployment:** Die 5 lodash-Findings im neuen Image sind weg, und es kommen keine neuen lodash-Findings dazu. Die Liste enthält nur lodash-Findings, also erwarte ich im neuen Image 0 aktive Findings. Zähle sie erst, wenn `get_image_scan_status` `readyForComparison: true` meldet und zwei Abfragen im Abstand von ein paar Minuten dasselbe Ergebnis zeigen."
+  },
+  {
+    "case": "undici-is-base-image",
+    "variant": "without-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "does not add undici to package.json",
+        "passed": true
+      },
+      {
+        "name": "fixes it in the image (Dockerfile / base image)",
+        "passed": true
+      },
+      {
+        "name": "names the bundled npm as the source",
+        "passed": true
+      }
+    ],
+    "duration_s": 31,
+    "answer": "Die undici-Findings kommen **nicht aus deinen Abhängigkeiten**. Beide zeigen auf diesen Pfad:\n\n```\n/usr/local/lib/node_modules/npm/node_modules/undici/package.json\n```\n\nDas ist die undici-Kopie, die in **npm** steckt. npm wird mit dem Base-Image `node:24.22.2-trixie-slim` mitgeliefert. In deiner `package.json` steht undici nicht. Deshalb hilft weder ein `npm update` noch ein `overrides`-Eintrag: Beides ändert nur `/app/node_modules`, nicht das globale npm.\n\nDein Service braucht npm zur Laufzeit nicht, denn `CMD` ruft direkt `node` auf. npm wird nur für `npm ci` beim Build gebraucht. Die sauberste Lösung ist deshalb, npm nach der Installation aus dem Image zu entfernen.\n\n**Konkrete Änderung im `Dockerfile`, Zeile 4:**\n\n```diff\n-RUN npm ci --omit=dev --ignore-scripts\n+RUN npm ci --omit=dev --ignore-scripts \\\n+ && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx\n```\n\nDanach baust du das Image neu und pushst es nach ECR. Inspector scannt das neue Image dann, und beide Findings (CVE-2026-109383 CRITICAL, CVE-2026-87018 HIGH) sollten wegfallen, weil die Datei nicht mehr existiert. Die Findings zum alten Digest `sha256:059aecfe…` bleiben aktiv, bis dieses Image nicht mehr getaggt ist oder gelöscht wird.\n\n**Alternative:** Du kannst auch auf ein neueres `node:24`-Image wechseln, dessen mitgeliefertes npm undici ≥ 8.12.2 enthält. Das ist die höchste der beiden Fix-Versionen. Ob es so ein Image schon gibt, habe ich nicht geprüft. Außerdem kann dasselbe Problem mit der nächsten npm-CVE wiederkommen. Wenn npm gar nicht im Image ist, fällt diese ganze Klasse von Findings dauerhaft weg.\n\n**Zwei Hinweise:**\n- Im Ordner liegt keine `package-lock.json`, aber das `Dockerfile` kopiert eine. Für den Build muss sie im Build-Kontext vorhanden sein.\n- In `findings.json` stehen nur die zwei undici-Findings. Deine eigenen Abhängigkeiten sind ziemlich alt: `express 4.17.1`, `jsonwebtoken 8.5.1` und `lodash 4.17.20`. Gegen diese Versionen gibt es aus früheren Jahren bekannte CVEs, und Inspector meldet sie hier trotzdem nicht. Das fällt auf und solltest du separat prüfen."
+  },
+  {
+    "case": "undici-is-base-image",
+    "variant": "with-skill",
+    "passed": 3,
+    "total": 3,
+    "checks": [
+      {
+        "name": "does not add undici to package.json",
+        "passed": true
+      },
+      {
+        "name": "fixes it in the image (Dockerfile / base image)",
+        "passed": true
+      },
+      {
+        "name": "names the bundled npm as the source",
+        "passed": true
+      }
+    ],
+    "duration_s": 36,
+    "answer": "Die beiden undici-Findings kommen **aus dem Base-Image, nicht aus deinem Service**. Deshalb muss nur das `Dockerfile` geändert werden, nicht `package.json`.\n\n## Woher die Findings kommen\n\nBeide Findings (CVE-2026-109383 CRITICAL, CVE-2026-87018 HIGH, undici 6.28.0) liegen unter:\n\n```\n/usr/local/lib/node_modules/npm/node_modules/undici/\n```\n\nDas ist die undici-Kopie, die mit **npm im Image `node:24.22.2-trixie-slim`** mitgeliefert wird. Dein `package.json` enthält kein undici (nur axios, express, jsonwebtoken, lodash). Ein Bump oder ein `overrides`-Eintrag dort würde diese Kopie nicht erreichen.\n\nDer Service braucht npm zur Laufzeit nicht: `CMD [\"node\", \"src/server.js\"]` startet direkt mit Node, und npm wird nur für `npm ci` beim Build benutzt. Am sichersten ist es deshalb, **npm im selben Build-Schritt wieder aus dem Image zu löschen**. Dann ist die betroffene Datei im fertigen Image gar nicht mehr vorhanden.\n\n## Konkrete Änderung im `Dockerfile`, Zeile 4\n\n```dockerfile\nFROM node:24.22.2-trixie-slim\nWORKDIR /app\nCOPY package.json package-lock.json ./\nRUN npm ci --omit=dev --ignore-scripts \\\n && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx\nCOPY src ./src\nUSER node\nEXPOSE 3000\nCMD [\"node\", \"src/server.js\"]\n```\n\nDas Löschen steht absichtlich im **selben `RUN`** wie `npm ci`. So entsteht keine Image-Schicht, in der npm noch enthalten ist.\n\n| Package | Source | Installed → target | Closes | Breaking | Notes |\n|---|---|---|---|---|---|\n| undici | Base-Image (npm im Node-Image) | 6.28.0 → entfernt | 2 Findings | nein | Der Fix in undici wäre erst 8.x, also ein Major-Sprung. Den kann man nicht selbst einspielen, weil die Kopie zu npm gehört. Das Entfernen von npm schließt beide Findings, ohne von einer Node-Version abzuhängen. |\n\n## Hinweise\n\n- **Nach dem Entfernen funktionieren `npm` und `npx` im laufenden Container nicht mehr**, also z. B. auch kein `docker exec … npm …`. Das sollte im PR stehen.\n- **Zusätzlich empfohlen, aber nicht nötig für diese Findings:** auf den neuesten Patch von Node 24 wechseln. Welche Version das ist und welche undici-Version deren npm mitbringt, habe ich nicht geprüft.\n- **Vor dem PR prüfen:**\n  - Ich habe das Image nicht gebaut. Bitte lokal bauen und starten, bevor der PR aufgeht.\n  - In diesem Ordner gibt es kein `package-lock.json` und kein `src/`. `COPY` braucht aber beides. Vermutlich ist das nur ein Auszug aus dem Repo, für den lokalen Build muss beides vorhanden sein.\n- **Als Änderung:** ein eigener Commit (Base-Image) in einem PR, der über die normale Pipeline ausgeliefert wird.\n- **Erwartetes Ergebnis nach dem Deployment:** **0 undici-Findings**, von bisher 2.\n  - Erst den Inspector-Status des neuen Image-Digests abwarten, bis `readyForComparison: true` gemeldet wird.\n  - Die Zahl erst melden, wenn zwei Abfragen im Abstand von ein paar Minuten übereinstimmen.\n\nSoll ich die Änderung im `Dockerfile` direkt eintragen?"
+  }
+]

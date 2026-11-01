@@ -1,0 +1,10 @@
+{
+  "title": "Treats a package bundled with npm as part of the base image",
+  "observed": "With the skill (single-package mode) Claude proposed fixing undici 'like lodash, one package per PR', although it comes from the npm bundled in the base image.",
+  "prompt": "In diesem Ordner liegen package.json und Dockerfile eines Node.js-Services sowie findings.json mit den aktiven Amazon-Inspector-Findings seines laufenden Images. Wie behebe ich die undici-Findings? Nenne die konkrete Änderung.",
+  "checks": [
+    { "name": "does not add undici to package.json", "type": "absent", "pattern": "npm (install|i|add)\\b[^\\n]*undici|\"undici\"\\s*:" },
+    { "name": "fixes it in the image (Dockerfile / base image)", "type": "present", "pattern": "Dockerfile|Basis-?Image|base image" },
+    { "name": "names the bundled npm as the source", "type": "present", "pattern": "bundled|mitgeliefert|node_modules/npm|npm[^\\n]{0,80}(Basis|base|Node[.-]?js-Image|im Image)" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Pins the fix version exactly after reading package.json",
+  "observed": "Without the skill Claude proposed ^4.18.1 and did not check package.json.",
+  "prompt": "In diesem Ordner liegen die package.json eines Node.js-Services, findings.json mit den aktiven Amazon-Inspector-Findings seines laufenden Images und osv.json mit den OSV-Ergebnissen je Version. Auf welche lodash-Version soll ich anheben? Nenne den genauen npm-Befehl.",
+  "checks": [
+    { "name": "target is 4.18.x", "type": "present", "pattern": "lodash@4\\.18\\.[01]" },
+    {
+      "name": "the npm command pins exactly",
+      "type": "lines",
+      "select": "^\\s*npm\\s+(install|i|add)\\b.*lodash",
+      "require": "--save-exact|\\s-E\\b",
+      "forbid": "lodash@[\\^~]"
+    },
+    { "name": "no version range proposed for package.json", "type": "absent", "pattern": "\"lodash\"\\s*:\\s*\"[\\^~]" }
+  ]
+}

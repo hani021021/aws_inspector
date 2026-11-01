@@ -1,0 +1,29 @@
+{
+  "source": "ECR DescribeImages for repository demo-service, image indexes resolved to their child manifests, recorded 2026-11-01",
+  "protectedTags": ["latest"],
+  "images": [
+    {
+      "digest": "sha256:e39ce5f02307ef4d52add41e9f6c3e0b5bf46efc95989e4898dd1c81a87ee718",
+      "tags": ["latest", "1.0.4"],
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "children": [
+        "sha256:12eeba9d90008ab723e1b4dc9d7ac1ae0b10a55511b5aa77072fca65318b3f56",
+        "sha256:41f6c5336408700ff0eab52f0be44303e72e60beebd4fa189b62f6876a836819"
+      ]
+    },
+    { "digest": "sha256:12eeba9d90008ab723e1b4dc9d7ac1ae0b10a55511b5aa77072fca65318b3f56", "tags": [], "mediaType": "application/vnd.oci.image.manifest.v1+json", "children": [] },
+    { "digest": "sha256:41f6c5336408700ff0eab52f0be44303e72e60beebd4fa189b62f6876a836819", "tags": [], "mediaType": "application/vnd.oci.image.manifest.v1+json", "children": [] },
+    {
+      "digest": "sha256:e86c159f376bba5f785d7cb18cb6bf92018a9aa5a4c9745b07ff086efa3bf35c",
+      "tags": ["1.0.3"],
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "children": [
+        "sha256:059aecfe7036b7fde6fcfa1ab4eb76207f0521722b14f5d145f3bf17a496420e",
+        "sha256:968f2fdd640576ade6ced8c040d594eacb326f465b0176d7280b5150159c53da"
+      ]
+    },
+    { "digest": "sha256:059aecfe7036b7fde6fcfa1ab4eb76207f0521722b14f5d145f3bf17a496420e", "tags": [], "mediaType": "application/vnd.oci.image.manifest.v1+json", "children": [] },
+    { "digest": "sha256:968f2fdd640576ade6ced8c040d594eacb326f465b0176d7280b5150159c53da", "tags": [], "mediaType": "application/vnd.oci.image.manifest.v1+json", "children": [] },
+    { "digest": "sha256:91de25a37d21b992a3a2d3f665555d0c93992857affb9de84a502fcbd0bd9774", "tags": ["1.0.2"], "mediaType": "application/vnd.oci.image.manifest.v1+json", "children": [] }
+  ]
+}

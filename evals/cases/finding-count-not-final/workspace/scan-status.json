@@ -1,0 +1,14 @@
+{
+  "source": "get_image_scan_status for tag latest in ECR repository demo-service, 20:05:10 UTC",
+  "digest": "sha256:af9e1464732631f672a5857391b549dc45d0222571bd853ba7d092b1f530fbe8",
+  "isIndex": true,
+  "images": [
+    {
+      "digest": "sha256:5d2fc364dbda380fc738096785d7487156064fad17eb2c0bb921bc54d65409e0",
+      "platform": "linux/amd64",
+      "scanStatus": "ACTIVE",
+      "description": "Continuous scan is selected for image.",
+      "readyForComparison": true
+    }
+  ]
+}

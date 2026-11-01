@@ -1,0 +1,5 @@
+{
+  "source": "list_active_findings for ECR repository demo-service and image digest sha256:5d2fc364dbda380fc738096785d7487156064fad17eb2c0bb921bc54d65409e0, 20:05:40 UTC - the only query so far",
+  "count": 0,
+  "findings": []
+}

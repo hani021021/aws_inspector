@@ -1,0 +1,36 @@
+{
+  "source": "Amazon Inspector ListFindings, status ACTIVE, ECR repository demo-service, recorded 2026-11-01",
+  "image": { "tags": ["1.0.2"], "digest": "sha256:91de25a37d21b992a3a2d3f665555d0c93992857affb9de84a502fcbd0bd9774" },
+  "findings": [
+    {
+      "vulnerabilityId": "CVE-2026-4800", "severity": "CRITICAL", "exploitAvailable": "YES",
+      "package": "lodash", "installedVersion": "4.17.20", "fixedInVersion": "4.18.0",
+      "filePath": "/app/node_modules/lodash/package.json",
+      "description": "Code injection via options.imports key names in _.template. Fixed in lodash 4.18.1; the standalone lodash.template package is fixed in 4.18.0."
+    },
+    {
+      "vulnerabilityId": "CVE-2021-23337", "severity": "HIGH", "exploitAvailable": "YES",
+      "package": "lodash", "installedVersion": "4.17.20", "fixedInVersion": "4.17.21",
+      "filePath": "/app/node_modules/lodash/package.json",
+      "description": "Command injection via the template function."
+    },
+    {
+      "vulnerabilityId": "CVE-2026-2950", "severity": "MEDIUM", "exploitAvailable": "NO",
+      "package": "lodash", "installedVersion": "4.17.20", "fixedInVersion": "4.18.0",
+      "filePath": "/app/node_modules/lodash/package.json",
+      "description": "Prototype pollution in _.unset and _.omit, bypass of the fix for CVE-2025-13465. Fixed in lodash 4.18.1; lodash.unset and lodash.omit in 4.18.0."
+    },
+    {
+      "vulnerabilityId": "CVE-2025-13465", "severity": "MEDIUM", "exploitAvailable": "NO",
+      "package": "lodash", "installedVersion": "4.17.20", "fixedInVersion": "4.17.23",
+      "filePath": "/app/node_modules/lodash/package.json",
+      "description": "Prototype pollution in _.unset and _.omit."
+    },
+    {
+      "vulnerabilityId": "CVE-2020-28500", "severity": "MEDIUM", "exploitAvailable": "YES",
+      "package": "lodash", "installedVersion": "4.17.20", "fixedInVersion": "4.17.21",
+      "filePath": "/app/node_modules/lodash/package.json",
+      "description": "Regular expression denial of service in toNumber, trim and trimEnd."
+    }
+  ]
+}

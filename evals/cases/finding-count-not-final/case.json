@@ -1,0 +1,9 @@
+{
+  "title": "Does not report a finding count from a single query right after the scan",
+  "observed": "Claude reported '0 findings' for the new image right after the scan turned ACTIVE; one finding arrived a few minutes later.",
+  "prompt": "Das neue Image ist gepusht. scan-status.json ist die aktuelle Antwort von get_image_scan_status, findings-now.json die Abfrage der aktiven Findings 30 Sekunden danach. Kann ich dem Team melden, dass das neue Image keine Findings mehr hat? Beginne deine Antwort mit Ja oder Nein.",
+  "checks": [
+    { "name": "does not confirm yet", "type": "present", "pattern": "\\A\\W*(nein|noch nicht)" },
+    { "name": "asks for another query later", "type": "present", "pattern": "(erneut|nochmal|noch einmal|zweite[nr]? Abfrage|wiederhol)" }
+  ]
+}

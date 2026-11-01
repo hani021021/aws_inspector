@@ -1,0 +1,6 @@
+{
+  "source": "OSV.dev, known vulnerabilities per npm version, recorded 2026-11-01",
+  "lodash@4.17.21": ["GHSA-29mw-wpgm-hmr9", "GHSA-xxjr-mmjv-4gpg", "GHSA-f23m-r3pf-42rh"],
+  "lodash@4.18.0": [],
+  "lodash@4.18.1": []
+}
