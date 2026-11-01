@@ -55,9 +55,10 @@ Search the service code for how the package is used (e.g. which lodash functions
 
 ## 7. Clean up
 
-- Use the deletion plan from `list_images`. Images with a protected tag (default `latest`) run in production and are never deleted; when no image carries one, delete nothing.
-- Delete image indexes before their child manifests.
-- Deleting always needs explicit human approval.
+- As soon as the new image is deployed and verified, **raise the cleanup yourself**: show which images would be deleted (dry run, or the plan from `list_images`) and ask the user for a yes. Do not wait to be asked.
+- Images with a protected tag (default `latest`) run in production and are never deleted; when no image carries one, delete nothing.
+- Delete only after an explicit yes, and only through the fixed cleanup command when it is available (`remediation-agent cleanup --repository <repo> --apply`). It deletes indexes before their children and refuses while the protected image is not fully scanned. Never pick digests to delete yourself.
+- Afterwards wait until the findings of the deleted images are `CLOSED` and report the remaining count.
 - Commands you hand to a human must be safe to copy as they are: name the AWS profile and region explicitly in every AWS CLI command and never rely on defaults – the default profile may belong to another account.
 
 ## Report format

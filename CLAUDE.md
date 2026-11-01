@@ -14,7 +14,7 @@ Remediation agent for Amazon Inspector findings in ECR images. Start with [READM
 | Part | Build / run | Test |
 |---|---|---|
 | `mcp-server/` (TypeScript) | `npm run build` | `npm test` |
-| `agent/` (Python, uv) | `uv run remediation-agent summarize --repository demo-service` | `uv run pytest`, `uv run ruff check .` |
+| `agent/` (Python, uv) | `uv run remediation-agent summarize --repository demo-service`; `uv run remediation-agent cleanup --repository demo-service` (dry run, `--apply` only after approval) | `uv run pytest`, `uv run ruff check .` |
 | `sandbox/demo-service/` | see its README (Docker, ECR push) | – |
 
 ## Conventions
