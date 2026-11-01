@@ -34,6 +34,13 @@ export interface RemediationStackProps extends StackProps {
   notifyEmail: string;
   /** GitHub repository ("owner/name") whose main branch may push images. */
   githubRepository: string;
+  /**
+   * Prefix of the `sub` claim in that repository's OIDC tokens. Repositories with immutable
+   * subjects use owner and repository IDs ("repo:owner@123/name@456"), so a renamed or
+   * re-created repository cannot take over the role. Check it with
+   * `gh api repos/OWNER/NAME/actions/oidc/customization/sub`.
+   */
+  githubSubjectPrefix: string;
 }
 
 // The Python package in agent/src is the code of every Lambda; boto3 comes with the runtime.
@@ -220,7 +227,7 @@ export class RemediationStack extends Stack {
         StringEquals: {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
           // Only workflow runs on the main branch of this repository, never forks or pull requests.
-          "token.actions.githubusercontent.com:sub": `repo:${props.githubRepository}:ref:refs/heads/main`,
+          "token.actions.githubusercontent.com:sub": `${props.githubSubjectPrefix}:ref:refs/heads/main`,
         },
       }),
     });

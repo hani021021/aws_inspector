@@ -91,6 +91,8 @@ First agent run (Claude Code with the MCP server and the remediation skill): lod
 
 Batch runs with the agent (one pull request per image, one commit per package): [#2](https://github.com/hani021021/aws_inspector/pull/2) closed 39 of 66 findings in under 5 minutes (express 4.x instead of the suggested 5.0 beta, npm removed from the runtime image), [#3](https://github.com/hani021021/aws_inspector/pull/3) moved the base image to Alpine 3.24 and closed the 27 Debian findings that had no fix. **95 → 1** active findings in total; the remaining one is a withdrawn express advisory whose only fix is a new major version. Old images are deleted by a fixed cleanup command after the agent asks and a human says yes.
 
+CI: GitHub Actions builds the demo service after every merge to main and pushes it as `<short sha>` and `latest`, signing in to AWS through OIDC – no stored keys; the trust policy matches GitHub's immutable subject (owner and repository IDs), so a renamed or re-created repository cannot assume the role. From merge to approval mail no manual step is left.
+
 Serverless workflow: a push of `latest` (1.0.6) started the state machine; 4½ minutes later – scan stable, plan e-mailed, approved with one click – the three entries of 1.0.5 were deleted and the decision was recorded in DynamoDB. The first run failed because the scan did not exist yet seconds after the push; the Lambda now treats that as pending.
 
 Evals ([evals/](evals/README.md)), first run, one trial per case: **with skill 100 %, without skill 91 %**. Only one of the four observed mistakes (reporting a finding count too early) reproduces in isolation; the others appeared in long sessions with live data. Next: harder, more realistic cases and several trials per case.

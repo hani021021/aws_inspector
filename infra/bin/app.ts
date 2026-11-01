@@ -20,4 +20,5 @@ new RemediationStack(app, "InspectorRemediation", {
   repositoryName: "demo-service",
   notifyEmail,
   githubRepository: "hani021021/aws_inspector",
+  githubSubjectPrefix: "repo:hani021021@58819538/aws_inspector@1439864638",
 });
