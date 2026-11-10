@@ -13,6 +13,10 @@ FROM node:24.22.2-alpine3.24
 # carry their own vulnerabilities, so it is removed from the runtime image.
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
+# The base image still ships zlib 1.3.2 (CVE-2026-4738); the fix 1.4-r0 is already in
+# the Alpine 3.24 repository. Drop this once a newer base image includes it.
+RUN apk upgrade --no-cache zlib
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
